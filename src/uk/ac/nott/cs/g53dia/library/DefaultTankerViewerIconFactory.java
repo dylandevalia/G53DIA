@@ -24,6 +24,9 @@ public class DefaultTankerViewerIconFactory implements TankerViewerIconFactory {
 	static ImageIcon wellIcon;
 	static ImageIcon stationIcon;
 	static ImageIcon stationWithTaskIcon;
+	static ImageIcon viewable;
+	static ImageIcon unviewable;
+	static ImageIcon viewableAxis;
 	
 	static {
 		// Pre-load the images
@@ -32,6 +35,9 @@ public class DefaultTankerViewerIconFactory implements TankerViewerIconFactory {
 		wellIcon = createImageIcon("images/well.png");
 		stationIcon = createImageIcon("images/station.png");
 		stationWithTaskIcon = createImageIcon("images/station_withtask.png");
+		viewable = createImageIcon("images/viewable.png");
+		unviewable = createImageIcon("images/unviewable.png");
+		viewableAxis = createImageIcon("images/viewableAxis.png");
 	}
 	
 	protected static ImageIcon createImageIcon(String path) {
@@ -57,9 +63,14 @@ public class DefaultTankerViewerIconFactory implements TankerViewerIconFactory {
 			} else {
 				return stationWithTaskIcon;
 			}
-			
 		} else {
-			return null;
+			if (((EmptyCell) cell).isOnAxis()) {
+				return viewableAxis;
+			} else if (((EmptyCell) cell).isViewable()) {
+				return viewable;
+			} else {
+				return unviewable;
+			}
 		}
 	}
 	

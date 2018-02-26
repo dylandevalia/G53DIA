@@ -25,15 +25,16 @@ import javax.swing.JPanel;
  */
 public class TankerViewer extends JFrame {
 	
-	/**
-	 *
-	 */
+	final static int EXTENDED_RANGE = 5,
+		SIZE = (Tanker.VIEW_RANGE * 2) + (EXTENDED_RANGE * 2) + 1,
+		ICON_SIZE = 25,
+		PSIZE = SIZE * ICON_SIZE;
+	
 	private static final long serialVersionUID = -2810783821678793885L;
 	TankerViewerIconFactory iconfactory;
 	JLabel[][] cells;
 	JLabel tstep, fuel, pos, waste, disposed, score;
 	Tanker tank;
-	final static int SIZE = (Tanker.VIEW_RANGE * 2) + 1, ICON_SIZE = 25, PSIZE = SIZE * ICON_SIZE;
 	
 	public TankerViewer(Tanker Tanker) {
 		this(Tanker, new DefaultTankerViewerIconFactory());
@@ -92,7 +93,7 @@ public class TankerViewer extends JFrame {
 		c.add(infop, BorderLayout.SOUTH);
 		//infop.setPreferredSize(new Dimension(200,100));
 		
-		setSize(PSIZE, PSIZE + 50);
+		setSize(PSIZE + 20, PSIZE + 95);
 		setTitle("Tanker Viewer");
 		setVisible(true);
 	}
@@ -102,7 +103,7 @@ public class TankerViewer extends JFrame {
 	}
 	
 	public void tick(Environment env) {
-		Cell[][] view = env.getView(tank.getPosition(), Tanker.VIEW_RANGE);
+		Cell[][] view = env.getView(tank.getPosition(), Tanker.VIEW_RANGE + EXTENDED_RANGE);
 		pos.setText(tank.getPosition().toString());
 		tstep.setText(new String("" + env.getTimestep()));
 		waste.setText(new String("" + tank.wasteLevel));

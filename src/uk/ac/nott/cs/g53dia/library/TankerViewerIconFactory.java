@@ -16,7 +16,7 @@ import javax.swing.Icon;
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 public interface TankerViewerIconFactory {
-
+	
 	/**
 	 * Select a suitable icon for the given cell.
 	 *
@@ -24,7 +24,7 @@ public interface TankerViewerIconFactory {
 	 * @return An icon representing the cell.
 	 */
 	public Icon getIconForCell(Cell cell);
-
+	
 	/**
 	 * Select an icon for a tanker.
 	 *
@@ -32,5 +32,5 @@ public interface TankerViewerIconFactory {
 	 * @return An icon representing the tanker.
 	 */
 	public Icon getIconForTanker(Tanker tanker);
-
+	
 }

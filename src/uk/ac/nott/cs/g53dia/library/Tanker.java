@@ -23,54 +23,54 @@ public abstract class Tanker {
 	 * The initial level of fuel in the tanker
 	 */
 	int fuelLevel = MAX_FUEL;
-
+	
 	/**
 	 * The initial level of waste in the tanker
 	 */
 	int wasteLevel = 0;
-
+	
 	/**
 	 * The total amount of waste disposed of
 	 */
 	int wasteDisposed = 0;
-
+	
 	/**
 	 * The maximum amount of fuel a Tanker can have.
 	 * Note: this is assumed to be an even number.
 	 */
 	public final static int MAX_FUEL = 100;
-
+	
 	/**
 	 * The maximum amount of waste a Tanker can have.
 	 */
 	public final static int MAX_WASTE = 1000;
-
+	
 	/**
 	 * The distance a Tanker can "see".
 	 */
 	public final static int VIEW_RANGE = 20;
-
+	
 	/**
 	 * Location of central refuelling point
 	 */
 	public final static Point FUEL_PUMP_LOCATION = new Point(0, 0);
-
+	
 	/**
 	 * The Tanker's current position in the environment.
 	 */
 	Point position = new Point(0, 0); // Default to origin
-
+	
 	// Fields used by actions
 	/**
 	 * Random number generator
 	 */
 	public Random r;
-
+	
 	/**
 	 * Flag indidcating that last action execution failed
 	 */
 	public boolean actionFailed = false;
-
+	
 	/**
 	 * Sub-classes must implement this method to provide the "brains" for the
 	 * Tanker.
@@ -80,14 +80,14 @@ public abstract class Tanker {
 	 * @return an action to perform
 	 */
 	public abstract Action senseAndAct(Cell[][] view, long timestep);
-
+	
 	/**
 	 * Get the Tanker's current position in the environment.
 	 */
 	public Point getPosition() {
 		return (Point) position.clone();
 	}
-
+	
 	/**
 	 * Get the cell currently occupied by the Tanker.
 	 *
@@ -97,7 +97,7 @@ public abstract class Tanker {
 	public Cell getCurrentCell(Cell[][] view) {
 		return view[VIEW_RANGE][VIEW_RANGE];
 	}
-
+	
 	/**
 	 * Use fuel - used by move actions/
 	 */
@@ -110,28 +110,28 @@ public abstract class Tanker {
 		}
 		fuelLevel -= a;
 	}
-
+	
 	/**
 	 * How much fuel does this tanker have?
 	 */
 	public int getFuelLevel() {
 		return fuelLevel;
 	}
-
+	
 	/**
 	 * The amount of waste the the tanker is currently carrying.
 	 */
 	public int getWasteLevel() {
 		return wasteLevel;
 	}
-
+	
 	/**
 	 * The amount of additional waste the tanker can carry.
 	 */
 	public int getWasteCapacity() {
 		return MAX_WASTE - wasteLevel;
 	}
-
+	
 	/**
 	 * Get the Tanker's current score
 	 *
@@ -141,5 +141,5 @@ public abstract class Tanker {
 	public int getScore() {
 		return wasteDisposed;
 	}
-
+	
 }

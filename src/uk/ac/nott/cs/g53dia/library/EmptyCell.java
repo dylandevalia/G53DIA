@@ -17,8 +17,26 @@ package uk.ac.nott.cs.g53dia.library;
 
 public class EmptyCell extends DefaultCell {
 	
+	private boolean viewable = false;
+	private boolean onAxis = false;
+	
 	EmptyCell(Point pos) {
 		super(pos);
 	}
 	
+	public void setViewable(boolean viewable) {
+		this.viewable = viewable;
+	}
+	
+	public boolean isViewable() {
+		return viewable;
+	}
+	
+	public void setOnAxis(boolean onAxis) {
+		this.onAxis = onAxis;
+	}
+	
+	public boolean isOnAxis() {
+		return onAxis;
+	}
 }

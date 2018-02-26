@@ -51,6 +51,10 @@ public class Task {
 		return amount;
 	}
 	
+	protected void setWasteAmount(int a) {
+		this.amount = a;
+	}
+	
 	/**
 	 * How much waste must be disposed of to complete the task?
 	 */
@@ -63,10 +67,6 @@ public class Task {
 	 */
 	public boolean isComplete() {
 		return disposed >= amount;
-	}
-	
-	protected void setWasteAmount(int a) {
-		this.amount = a;
 	}
 	
 	protected void dispose(int d) {
