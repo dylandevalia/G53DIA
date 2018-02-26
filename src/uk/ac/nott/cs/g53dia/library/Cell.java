@@ -2,7 +2,7 @@ package uk.ac.nott.cs.g53dia.library;
 
 /**
  * Interface implemented by items in the {@link Environment}.
- * 
+ *
  * @author Neil Madden
  */
 
@@ -10,11 +10,12 @@ package uk.ac.nott.cs.g53dia.library;
  * Copyright (c) 2003 Stuart Reeves
  * Copyright (c) 2003-2005 Neil Madden (nem@cs.nott.ac.uk).
  * Copyright (c) 2010 University of Nottingham.
- * 
+ *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 public interface Cell {
+	
 	public Point getPoint();
 }

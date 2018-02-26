@@ -8,7 +8,7 @@ package uk.ac.nott.cs.g53dia.library;
 
 /*
  * Copyright (c) 2009 Julian Zappala (jxz@cs.nott.ac.uk)
- * 
+ *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
