@@ -1,6 +1,7 @@
 package uk.ac.nott.cs.g53dia.demo;
 
 import java.util.Random;
+import javax.swing.WindowConstants;
 import uk.ac.nott.cs.g53dia.library.Action;
 import uk.ac.nott.cs.g53dia.library.ActionFailedException;
 import uk.ac.nott.cs.g53dia.library.Cell;
@@ -48,7 +49,7 @@ public class DemoSimulator {
 		Tanker tank = new DemoTanker(r);
 		// Create a GUI window to show the tanker
 		TankerViewer tv = new TankerViewer(tank);
-		tv.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+		tv.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		// Start executing the Tanker
 		while (env.getTimestep() < DURATION) {
 			// Advance the environment time-step
