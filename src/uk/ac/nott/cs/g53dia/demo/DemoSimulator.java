@@ -27,12 +27,12 @@ import uk.ac.nott.cs.g53dia.library.TankerViewer;
  */
 
 public class DemoSimulator {
-
+	
 	/**
 	 * Time for which execution pauses so that GUI can update.
 	 * Reducing this value causes the simulation to run faster.
 	 */
-	private static int DELAY = 100;
+	private static int DELAY = 10;
 	
 	/**
 	 * Number of timesteps to execute
@@ -51,14 +51,16 @@ public class DemoSimulator {
 		tv.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
 		// Start executing the Tanker
 		while (env.getTimestep() < DURATION) {
-			// Advance the environment timestep
+			// Advance the environment time-step
 			env.tick();
 			// Update the GUI
 			tv.tick(env);
+			
 			// Get the current view of the tanker
 			Cell[][] view = env.getView(tank.getPosition(), Tanker.VIEW_RANGE);
 			// Let the tanker choose an action
 			Action act = tank.senseAndAct(view, env.getTimestep());
+			
 			// Try to execute the action
 			try {
 				act.execute(env, tank);
@@ -74,6 +76,4 @@ public class DemoSimulator {
 			}
 		}
 	}
-
-	
 }
