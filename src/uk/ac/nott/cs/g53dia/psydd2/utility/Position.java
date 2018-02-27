@@ -2,6 +2,7 @@ package uk.ac.nott.cs.g53dia.psydd2.utility;
 
 import uk.ac.nott.cs.g53dia.library.Action;
 import uk.ac.nott.cs.g53dia.library.MoveAction;
+import uk.ac.nott.cs.g53dia.psydd2.MyMoveAction;
 
 public class Position {
 	
@@ -36,9 +37,9 @@ public class Position {
 			return MoveAction.WEST;
 		} else if (pos.x < 0 && pos.y > 0) {
 			return MoveAction.NORTHWEST;
+		} else {
+			return -1;
 		}
-		
-		throw new IllegalArgumentException("Position is the same");
 	}
 	
 	/**
@@ -141,6 +142,10 @@ public class Position {
 	}
 	
 	public Action moveToward(Position other) {
-		return new MoveAction(positionToMoveAction(other.sub(this)));
+		int direction = positionToMoveAction(other.copy().sub(this));
+		if (direction < 0) {
+			return null;
+		}
+		return new MyMoveAction(direction);
 	}
 }

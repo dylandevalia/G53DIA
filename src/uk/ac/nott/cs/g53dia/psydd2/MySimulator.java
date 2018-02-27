@@ -15,7 +15,7 @@ public class MySimulator {
 	
 	public static void main(String[] args) {
 		
-		final int DELAY = 500;
+		final int DELAY = 100;
 		final int DURATION = 10000;
 		
 		Random rnd = new Random(19960203); // new Random(System.nanoTime());
