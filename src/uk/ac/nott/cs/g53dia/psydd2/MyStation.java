@@ -8,11 +8,12 @@ import uk.ac.nott.cs.g53dia.library.Task;
  */
 public class MyStation {
 	
+	private final int COOL_DOWN = (int) (1 / 0.001);
+	
 	/** The station cell */
 	private Station station;
-	
 	/** Number of steps since last checked on */
-	private int coolDown = (int) (1 / 0.001);
+	private int coolDown = COOL_DOWN;
 	
 	MyStation(Station station) {
 		this.station = station;
@@ -24,6 +25,11 @@ public class MyStation {
 	
 	public boolean equals(Object o) {
 		return station.equals(o);
+	}
+	
+	public void updateStation(Station station) {
+		this.station = station;
+		coolDown = COOL_DOWN;
 	}
 	
 	public void tick() {

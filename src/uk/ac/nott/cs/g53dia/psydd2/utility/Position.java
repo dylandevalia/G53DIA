@@ -148,4 +148,12 @@ public class Position {
 		}
 		return new MyMoveAction(direction);
 	}
+	
+	/**
+	 * Override hashCode to make sure identical points produce identical
+	 * hashes.
+	 */
+	public int hashCode() {
+		return (((x & 0xff) << 16) + (y & 0xff));
+	}
 }

@@ -15,7 +15,7 @@ public class MySimulator {
 	
 	public static void main(String[] args) {
 		
-		final int DELAY = 100;
+		final int DELAY = 1;
 		final int DURATION = 10000;
 		
 		Random rnd = new Random(19960203); // new Random(System.nanoTime());
@@ -32,8 +32,8 @@ public class MySimulator {
 			// Draw view range and axis
 			showTankerView(view, true);
 			
-			// Update the tanker
-			tankerViewer.tick(environment);
+			// Update the GUI
+//			tankerViewer.tick(environment);
 			
 			// Get taker's action based on its view
 			Action action = tanker.senseAndAct(view, environment.getTimestep());
@@ -58,6 +58,8 @@ public class MySimulator {
 			// Undo view range UI
 			showTankerView(view, false);
 		}
+		
+		tankerViewer.tick(environment);
 	}
 	
 	private static void showTankerView(Cell[][] view, boolean show) {

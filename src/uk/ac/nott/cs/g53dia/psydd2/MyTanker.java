@@ -25,14 +25,18 @@ import uk.ac.nott.cs.g53dia.psydd2.utility.Position;
  */
 public class MyTanker extends Tanker {
 	
-	private final double FUEL_BUFFER_PERCENT = 0.1;
-	private final double FUEL_BUFFER = Tanker.MAX_FUEL * FUEL_BUFFER_PERCENT;
+	private static final double FUEL_BUFFER_PERCENT = 0.1;
+	private static final double FUEL_BUFFER = Tanker.MAX_FUEL * FUEL_BUFFER_PERCENT;
+	
+	private Position pos = new Position(0, 0), lastPos = pos.copy();
+	
 	private LinkedHashMap<FuelPump, Position> fuelPumps = new LinkedHashMap<>();
-	private LinkedHashMap<Station, Position> stations = new LinkedHashMap<>();
+	private LinkedHashMap<MyStation, Position> stations = new LinkedHashMap<>();
 	private LinkedHashMap<Well, Position> wells = new LinkedHashMap<>();
+	
 	private Action lastAction = null;
 	private boolean triedToMove = false;
-	private Position pos = new Position(0, 0), lastPos = pos.copy();
+	private boolean pickedUp = false;
 	
 	MyTanker(Random r) {
 		this.r = r;
@@ -65,9 +69,9 @@ public class MyTanker extends Tanker {
 		// Look through view
 		sense(view);
 		
-		ArrayList<Map.Entry<FuelPump, Position>> sortedFuelPumps = sortFuelPumps();
-		ArrayList<Map.Entry<Station, Position>> sortedStations = sortStations();
-		ArrayList<Map.Entry<Well, Position>> sortedWells = sortWells();
+		ArrayList<Map.Entry<FuelPump, Position>> sortedFuelPumps = sortFuelPumps(pos);
+		ArrayList<Map.Entry<MyStation, Position>> sortedStations = sortStations(pos);
+		ArrayList<Map.Entry<Well, Position>> sortedWells = sortWells(pos);
 		
 		Action action = act(sortedFuelPumps, sortedStations, sortedWells);
 		
@@ -101,14 +105,15 @@ public class MyTanker extends Tanker {
 				} else if (cell instanceof Station) {
 //					System.out.println("Station");
 					boolean found = false;
-					for (Map.Entry<Station, Position> s : stations.entrySet()) {
+					for (Map.Entry<MyStation, Position> s : stations.entrySet()) {
 						if (s.getKey().equals(cell)) {
 							found = true;
+							s.getKey().updateStation((Station) cell);
 							break;
 						}
 					}
 					if (!found) {
-						stations.put((Station) cell, cellPos);
+						stations.put(new MyStation((Station) cell), cellPos);
 					}
 				} else if (cell instanceof Well) {
 //					System.out.println("Well");
@@ -123,7 +128,7 @@ public class MyTanker extends Tanker {
 	
 	private Action act(
 		ArrayList<Map.Entry<FuelPump, Position>> fuelPumps,
-		ArrayList<Map.Entry<Station, Position>> stations,
+		ArrayList<Map.Entry<MyStation, Position>> stations,
 		ArrayList<Map.Entry<Well, Position>> wells
 	) {
 		Action finalAction;
@@ -133,12 +138,12 @@ public class MyTanker extends Tanker {
 			return finalAction;
 		}
 		
-		finalAction = wasteCheck(stations, wells);
+		finalAction = stationCheck(fuelPumps, stations);
 		if (finalAction != null) {
 			return finalAction;
 		}
 		
-		finalAction = stationCheck();
+		finalAction = wasteCheck(stations, wells);
 		if (finalAction != null) {
 			return finalAction;
 		}
@@ -157,10 +162,10 @@ public class MyTanker extends Tanker {
 	 *
 	 * @param fuelPumps List of fuelPumps sorted by distance from tanker
 	 * @return {@link MyMoveAction} or {@link RefuelAction} if fuel is needed
-	 * or <code>null</code> if not
+	 * or {@code null} if not
 	 */
 	private Action fuelCheck(ArrayList<Map.Entry<FuelPump, Position>> fuelPumps) {
-		double fuelLevel = getFuelLevel() - FUEL_BUFFER;
+		double fuelLevel = getFuel();
 		int distance = fuelPumps.get(0).getValue().copy().distanceTo(pos);
 		
 		// If too far from fuel pump
@@ -179,30 +184,25 @@ public class MyTanker extends Tanker {
 		return null;
 	}
 	
+	/**
+	 * Checks if the tanker is on a station with a task and gets waste. If it
+	 * has waste, it moves towards the nearest well and dumps waste
+	 *
+	 * @param stations The list of stations sorted by distance from tanker
+	 * @param wells    The list of wells sorted by distance from tanker
+	 * @return {@link LoadWasteAction} if on a station and can get waste,
+	 * {@link DisposeWasteAction} if on a well, {@code null} else
+	 */
 	private Action wasteCheck(
-		ArrayList<Map.Entry<Station, Position>> stations,
+		ArrayList<Map.Entry<MyStation, Position>> stations,
 		ArrayList<Map.Entry<Well, Position>> wells
 	) {
-		if (
-			stations.get(0).getKey().getTask() == null
-			|| stations.get(0).getValue().distanceTo(pos) < getFuelLevel() - FUEL_BUFFER
-		) {
-			// If no stations have a task or nearest station with task is out of reach
-			return null;
-		}
-		
-		// If on a station
-		if (pos.distanceTo(stations.get(0).getValue()) == 0) {
-			// and can carry more waste
-			if (getWasteCapacity() < Tanker.MAX_WASTE) {
-				return new LoadWasteAction(stations.get(0).getKey().getTask());
-			}
-		}
-		
 		// If carrying no waste
-		if (getWasteCapacity() == 0) {
+		if (getWasteLevel() == 0) {
 			return null;
 		}
+		
+		// TODO: Search through nearby stations if have room to spare
 		// vvv Thus carrying waste vvv
 		
 		// If on a well
@@ -214,7 +214,61 @@ public class MyTanker extends Tanker {
 		return pos.moveToward(wells.get(0).getValue());
 	}
 	
-	private Action stationCheck() {
+	private Action stationCheck(
+		ArrayList<Map.Entry<FuelPump, Position>> fuelPumps,
+		ArrayList<Map.Entry<MyStation, Position>> stations
+	) {
+		if (
+			stations.get(0).getKey().getTask() == null
+				|| getWasteLevel() == Tanker.MAX_WASTE
+				|| getFuel() < stations.get(0).getValue().distanceTo(pos)
+			) {
+			// If no stations have a task
+			// or waste level is max
+			// or nearest station with task is out of reach
+			return null;
+		}
+		
+		// If on a station
+		if (pos.distanceTo(stations.get(0).getValue()) == 0) {
+			return new LoadWasteAction(stations.get(0).getKey().getTask());
+		}
+		
+		// Pick station to go to
+		for (Entry<MyStation, Position> station : stations) {
+			MyStation s = station.getKey();
+			Position p = station.getValue();
+			
+			// If no tasks, exit
+			if (s.getTask() == null) {
+				return null;
+			}
+			
+			// If stations is too far away, ignore
+			int distToStation = p.distanceTo(pos);
+			if (distToStation > getFuel()) {
+				continue;
+			}
+			
+			// vvv Is within fuel range and has a task vvv
+			
+			// If tanker has fuel, limit range
+			double range = (getWasteLevel() > 0)
+				? Tanker.MAX_FUEL * FUEL_BUFFER_PERCENT
+				: getFuel();
+			
+			// Calculate dist pos->station->fuel pump
+			ArrayList<Map.Entry<FuelPump, Position>> pumps = sortFuelPumps(p);
+			int distStationToPump = p.distanceTo(pumps.get(0).getValue());
+			if (distToStation + distStationToPump > range) {
+				continue;
+			}
+			
+			// Found nearest pump that can go to station with enough fuel
+			// to get to pump afterwards. Move towards it
+			return pos.moveToward(p);
+		}
+		
 		return null;
 	}
 	
@@ -228,13 +282,15 @@ public class MyTanker extends Tanker {
 	 *
 	 * @return List where the first element is the closest station with waste
 	 */
-	private ArrayList<Map.Entry<Station, Position>> sortStations() {
-		ArrayList<Entry<Station, Position>> sortedStations = new ArrayList<>(stations.entrySet());
+	private ArrayList<Map.Entry<MyStation, Position>> sortStations(Position distFrom) {
+		ArrayList<Entry<MyStation, Position>> sortedStations = new ArrayList<>(stations.entrySet());
 		sortedStations.sort((a, b) -> {
 			// To return:
 			//   positive if a is better
 			//   zero     if equal
 			//   negative if b is better
+			
+			// TODO: Improve calculation weighing up amount at station vs travel costs
 			
 			Task aTask = a.getKey().getTask();
 			Task bTask = b.getKey().getTask();
@@ -244,11 +300,11 @@ public class MyTanker extends Tanker {
 			// If one has doesn't have waste
 			if (aWaste == 0 || bWaste == 0) {
 				// Return one with waste or equal
-				return aWaste - bWaste;
+				return bWaste - aWaste;
 			}
 			
-			int aDist = a.getValue().distanceTo(pos);
-			int bDist = b.getValue().distanceTo(pos);
+			int aDist = a.getValue().distanceTo(distFrom);
+			int bDist = b.getValue().distanceTo(distFrom);
 			
 			return aDist - bDist;
 		});
@@ -261,9 +317,9 @@ public class MyTanker extends Tanker {
 	 *
 	 * @return List where the first element is closest fuel pump
 	 */
-	private ArrayList<Map.Entry<FuelPump, Position>> sortFuelPumps() {
+	private ArrayList<Map.Entry<FuelPump, Position>> sortFuelPumps(Position distFrom) {
 		ArrayList<Entry<FuelPump, Position>> sortedPumps = new ArrayList<>(fuelPumps.entrySet());
-		sortedPumps.sort(Comparator.comparingInt(a -> a.getValue().distanceTo(pos)));
+		sortedPumps.sort(Comparator.comparingInt(a -> a.getValue().distanceTo(distFrom)));
 		return sortedPumps;
 	}
 	
@@ -272,9 +328,13 @@ public class MyTanker extends Tanker {
 	 *
 	 * @return List where the first element is the closet well
 	 */
-	private ArrayList<Map.Entry<Well, Position>> sortWells() {
+	private ArrayList<Map.Entry<Well, Position>> sortWells(Position distFrom) {
 		ArrayList<Entry<Well, Position>> sortedPumps = new ArrayList<>(wells.entrySet());
-		sortedPumps.sort(Comparator.comparingInt(a -> a.getValue().distanceTo(pos)));
+		sortedPumps.sort(Comparator.comparingInt(a -> a.getValue().distanceTo(distFrom)));
 		return sortedPumps;
+	}
+	
+	private double getFuel() {
+		return super.getFuelLevel() - FUEL_BUFFER;
 	}
 }
