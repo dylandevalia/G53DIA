@@ -75,10 +75,6 @@ public class MyTanker extends Tanker {
 		
 		Action action = act(sortedFuelPumps, sortedStations, sortedWells);
 		
-		if (action == null) {
-			action = new MyMoveAction(MoveAction.NORTH);
-		}
-		
 		triedToMove = false;
 		if (action instanceof MyMoveAction) {
 			triedToMove = true;
@@ -88,6 +84,12 @@ public class MyTanker extends Tanker {
 		return action;
 	}
 	
+	/**
+	 * Goes through tanker's view and updates its references to cells and records
+	 * new cells
+	 *
+	 * @param view The view of the tanker
+	 */
 	private void sense(Cell[][] view) {
 		for (int i = 0; i < view.length; i++) {
 			for (int j = 0; j < view[i].length; j++) {
@@ -121,6 +123,11 @@ public class MyTanker extends Tanker {
 				}
 			}
 		}
+		
+		// Tick all stations
+		for (Map.Entry<MyStation, Position> s : stations.entrySet()) {
+			s.getKey().tick();
+		}
 
 //		System.out.println(pos);
 //		System.out.println(getPosition() + "\n");
@@ -138,7 +145,7 @@ public class MyTanker extends Tanker {
 			return finalAction;
 		}
 		
-		finalAction = stationCheck(fuelPumps, stations);
+		finalAction = stationCheck(wells, stations);
 		if (finalAction != null) {
 			return finalAction;
 		}
@@ -148,7 +155,7 @@ public class MyTanker extends Tanker {
 			return finalAction;
 		}
 		
-		finalAction = explore();
+		finalAction = explore(stations);
 		if (finalAction != null) {
 			return finalAction;
 		}
@@ -166,10 +173,13 @@ public class MyTanker extends Tanker {
 	 */
 	private Action fuelCheck(ArrayList<Map.Entry<FuelPump, Position>> fuelPumps) {
 		double fuelLevel = getFuel();
-		int distance = fuelPumps.get(0).getValue().copy().distanceTo(pos);
+		int distance = fuelPumps.get(0).getValue().distanceTo(pos);
 		
 		// If too far from fuel pump
-		if (fuelLevel <= distance) {
+		if (
+			fuelLevel <= distance
+				|| (distance < Tanker.VIEW_RANGE / 5 && fuelLevel < Tanker.MAX_FUEL / 10)
+			) {
 			Action action = pos.moveToward(fuelPumps.get(0).getValue());
 			
 			if (action == null) {
@@ -180,42 +190,24 @@ public class MyTanker extends Tanker {
 			}
 		}
 		
+		// TODO: If near a pump and need to fill soon, just do it now
+		
 		// Don't need to refuel
 		return null;
 	}
 	
 	/**
-	 * Checks if the tanker is on a station with a task and gets waste. If it
-	 * has waste, it moves towards the nearest well and dumps waste
+	 * Checks if stations have tasks and goes to them if they do.
+	 * Sees if station is within range, has a task and has enough fuel.
+	 * If the tanker has waste, it reduces the search range to 1/10th of the
+	 * fuel range
 	 *
-	 * @param stations The list of stations sorted by distance from tanker
-	 * @param wells    The list of wells sorted by distance from tanker
-	 * @return {@link LoadWasteAction} if on a station and can get waste,
-	 * {@link DisposeWasteAction} if on a well, {@code null} else
+	 * @param wells
+	 * @param stations
+	 * @return
 	 */
-	private Action wasteCheck(
-		ArrayList<Map.Entry<MyStation, Position>> stations,
-		ArrayList<Map.Entry<Well, Position>> wells
-	) {
-		// If carrying no waste
-		if (getWasteLevel() == 0) {
-			return null;
-		}
-		
-		// TODO: Search through nearby stations if have room to spare
-		// vvv Thus carrying waste vvv
-		
-		// If on a well
-		if (wells.get(0).getValue().distanceTo(pos) == 0) {
-			return new DisposeWasteAction();
-		}
-		
-		// Move towards well
-		return pos.moveToward(wells.get(0).getValue());
-	}
-	
 	private Action stationCheck(
-		ArrayList<Map.Entry<FuelPump, Position>> fuelPumps,
+		ArrayList<Map.Entry<Well, Position>> wells,
 		ArrayList<Map.Entry<MyStation, Position>> stations
 	) {
 		if (
@@ -244,23 +236,30 @@ public class MyTanker extends Tanker {
 				return null;
 			}
 			
+//			// If stations is too far away, ignore
+//			int distToStation = p.distanceTo(pos);
+//			if (distToStation > getFuel()) {
+//				continue;
+//			}
+			
+			
+			// If tanker has waste, limit range
+			double range = (getWasteLevel() > 0)
+				? wells.get(0).getValue().distanceTo(pos) //Tanker.MAX_FUEL * FUEL_BUFFER_PERCENT
+				: getFuel();
+
 			// If stations is too far away, ignore
 			int distToStation = p.distanceTo(pos);
-			if (distToStation > getFuel()) {
+			if (distToStation > range) {
 				continue;
 			}
-			
 			// vvv Is within fuel range and has a task vvv
 			
-			// If tanker has fuel, limit range
-			double range = (getWasteLevel() > 0)
-				? Tanker.MAX_FUEL * FUEL_BUFFER_PERCENT
-				: getFuel();
 			
 			// Calculate dist pos->station->fuel pump
 			ArrayList<Map.Entry<FuelPump, Position>> pumps = sortFuelPumps(p);
 			int distStationToPump = p.distanceTo(pumps.get(0).getValue());
-			if (distToStation + distStationToPump > range) {
+			if (distToStation + distStationToPump > getFuel()) {
 				continue;
 			}
 			
@@ -272,8 +271,73 @@ public class MyTanker extends Tanker {
 		return null;
 	}
 	
-	private Action explore() {
-		return null;
+	/**
+	 * Checks if the tanker is on a station with a task and gets waste. If it
+	 * has waste, it moves towards the nearest well and dumps waste
+	 *
+	 * @param stations The list of stations sorted by distance from tanker
+	 * @param wells    The list of wells sorted by distance from tanker
+	 * @return {@link LoadWasteAction} if on a station and can get waste,
+	 * {@link DisposeWasteAction} if on a well, {@code null} else
+	 */
+	private Action wasteCheck(
+		ArrayList<Map.Entry<MyStation, Position>> stations,
+		ArrayList<Map.Entry<Well, Position>> wells
+	) {
+		// If carrying no waste
+		if (getWasteLevel() == 0) {
+			return null;
+		}
+		
+		// If on a well
+		if (wells.get(0).getValue().distanceTo(pos) == 0) {
+			return new DisposeWasteAction();
+		} else if (wells.get(0).getValue().distanceTo(pos) > getFuel()) {
+			return null;
+		}
+		
+		// Move towards well
+		return pos.moveToward(wells.get(0).getValue());
+	}
+	
+	int di = 1, dj = 1;
+	int spiralLen = Tanker.VIEW_RANGE;
+	int segmentsPassed = 0;
+	
+	private Action explore(ArrayList<Map.Entry<MyStation, Position>> stations) {
+		// TO DO: Spiral pattern
+		
+		// Update stations that haven't been visited/updated in a while
+		for (Map.Entry<MyStation, Position> s : stations) {
+			if (s.getValue().distanceTo(pos) > getFuel() + Tanker.VIEW_RANGE) {
+				break;
+			}
+			
+			if (s.getKey().shouldRecheck()) {
+				return pos.moveToward(s.getValue());
+			}
+		}
+		
+		// Spiral pattern
+		Position tpos = new Position(pos.x + di, pos.y + dj);
+		++segmentsPassed;
+		if (segmentsPassed == spiralLen) {
+			segmentsPassed = 0;
+			
+			// rotate
+			int buffer = dj;
+			dj = -di;
+			di = buffer;
+			
+			if (dj == 1 && spiralLen == Tanker.VIEW_RANGE) {
+//				if ((spiralLen += Tanker.VIEW_RANGE) > Tanker.MAX_FUEL / 2) {
+//					spiralLen = 1;
+//				}
+				spiralLen *= 2;
+			}
+		}
+		
+		return pos.moveToward(tpos);
 	}
 	
 	
@@ -290,8 +354,6 @@ public class MyTanker extends Tanker {
 			//   zero     if equal
 			//   negative if b is better
 			
-			// TODO: Improve calculation weighing up amount at station vs travel costs
-			
 			Task aTask = a.getKey().getTask();
 			Task bTask = b.getKey().getTask();
 			int aWaste = (aTask == null) ? 0 : aTask.getWasteRemaining();
@@ -302,6 +364,8 @@ public class MyTanker extends Tanker {
 				// Return one with waste or equal
 				return bWaste - aWaste;
 			}
+			
+			// TODO: Improve calculation weighing up amount at station vs travel costs
 			
 			int aDist = a.getValue().distanceTo(distFrom);
 			int bDist = b.getValue().distanceTo(distFrom);

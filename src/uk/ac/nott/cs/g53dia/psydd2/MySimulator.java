@@ -10,15 +10,16 @@ import uk.ac.nott.cs.g53dia.library.Environment;
 import uk.ac.nott.cs.g53dia.library.OutOfFuelException;
 import uk.ac.nott.cs.g53dia.library.Tanker;
 import uk.ac.nott.cs.g53dia.library.TankerViewer;
+import uk.ac.nott.cs.g53dia.psydd2.utility.Utility;
 
 public class MySimulator {
 	
 	public static void main(String[] args) {
 		
-		final int DELAY = 1;
+		final int DELAY = 50;
 		final int DURATION = 10000;
 		
-		Random rnd = new Random(19960203); // new Random(System.nanoTime());
+		Random rnd = new Random(567891234); // new Random(System.nanoTime());
 		Environment environment = new Environment(Tanker.MAX_FUEL / 2, rnd);
 		MyTanker tanker = new MyTanker(rnd);
 		TankerViewer tankerViewer = new TankerViewer(tanker);
@@ -33,7 +34,7 @@ public class MySimulator {
 			showTankerView(view, true);
 			
 			// Update the GUI
-//			tankerViewer.tick(environment);
+			tankerViewer.tick(environment);
 			
 			// Get taker's action based on its view
 			Action action = tanker.senseAndAct(view, environment.getTimestep());
