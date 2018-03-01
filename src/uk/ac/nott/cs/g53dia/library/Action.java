@@ -1,5 +1,4 @@
 package uk.ac.nott.cs.g53dia.library;
-
 /**
  * Interface implemented by all actions.
  *
@@ -12,20 +11,19 @@ package uk.ac.nott.cs.g53dia.library;
 /*
  * Copyright (c) 2003 Stuart Reeves
  * Copyright (c) 2003-2005 Neil Madden (nem@cs.nott.ac.uk)
- *
+ * 
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 public interface Action {
-	
-	/**
-	 * Execute the action for this Tanker in this Environment.
-	 *
-	 * @param tanker The Tanker trying to perform this action.
-	 * @param env    The Environment that the Tanker inhabits.
-	 * @throws ActionFailedException The action couldn't be performed.
-	 */
-	public abstract void execute(Environment env, Tanker tanker)
-		throws ActionFailedException;
+
+    /**
+     * Execute the action for this Tanker in this Environment.
+     * @throws ActionFailedException The action couldn't be performed.
+     * @param tanker The Tanker trying to perform this action.
+     * @param env The Environment that the Tanker inhabits.
+     */
+    public abstract void execute(Environment env, Tanker tanker) 
+        throws ActionFailedException;
 }
 
