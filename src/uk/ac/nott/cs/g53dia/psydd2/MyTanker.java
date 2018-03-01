@@ -86,8 +86,7 @@ public class MyTanker extends Tanker {
 	}
 	
 	/**
-	 * Goes through tanker's view and updates its references to cells and records
-	 * new cells
+	 * Goes through tanker's view and updates its references to cells and records new cells
 	 *
 	 * @param view The view of the tanker
 	 */
@@ -169,8 +168,7 @@ public class MyTanker extends Tanker {
 	 * Checks if tanker needs fuel and goes to refuel if it does
 	 *
 	 * @param fuelPumps List of fuelPumps sorted by distance from tanker
-	 * @return {@link MyMoveAction} or {@link RefuelAction} if fuel is needed
-	 * or {@code null} if not
+	 * @return {@link MyMoveAction} or {@link RefuelAction} if fuel is needed or {@code null} if not
 	 */
 	private Action fuelCheck(ArrayList<Map.Entry<FuelPump, Position>> fuelPumps) {
 		double fuelLevel = getFuel();
@@ -191,22 +189,19 @@ public class MyTanker extends Tanker {
 			}
 		}
 		
-		// TODO: If near a pump and need to fill soon, just do it now
-		
 		// Don't need to refuel
 		return null;
 	}
 	
 	/**
-	 * Checks if stations have tasks and goes to them if they do.
-	 * Sees if station is within range, has a task and has enough fuel.
-	 * If the tanker has waste, it reduces the search range to 1/10th of the
-	 * fuel range
+	 * Checks if stations have tasks and goes to them if they do. Sees if station is within range,
+	 * has a task and has enough fuel. If the tanker has waste, it reduces the search range to
+	 * 1/10th of the fuel range
 	 *
 	 * @param wells    List of wells sorted by distance from player
 	 * @param stations List of stations sorted by if they have a task then by distance
-	 * @return {@link MyMoveAction} or {@link LoadWasteAction} if picking up waste
-	 * or {@code null} if not
+	 * @return {@link MyMoveAction} or {@link LoadWasteAction} if picking up waste or {@code null}
+	 * if not
 	 */
 	private Action stationCheck(
 		ArrayList<Map.Entry<Well, Position>> wells,
@@ -273,18 +268,20 @@ public class MyTanker extends Tanker {
 	}
 	
 	/**
-	 * Checks if the tanker is on a station with a task and gets waste. If it
-	 * has waste, it moves towards the nearest well and dumps waste
+	 * Checks if the tanker is on a station with a task and gets waste. If it has waste, it moves
+	 * towards the nearest well and dumps waste
 	 *
 	 * @param wells The list of wells sorted by distance from tanker
-	 * @return {@link LoadWasteAction} if on a station and can get waste,
-	 * {@link DisposeWasteAction} if on a well, {@code null} else
+	 * @return {@link LoadWasteAction} if on a station and can get waste, {@link DisposeWasteAction}
+	 * if on a well, {@code null} else
 	 */
 	private Action wasteCheck(
 		ArrayList<Map.Entry<Well, Position>> wells
 	) {
-		// If carrying no waste
-		if (wells.size() == 0 || getWasteLevel() == 0) {
+		// If found no wells or carrying no waste or nearest well to too far to get to
+		if (wells.size() == 0 || getWasteLevel() == 0
+			|| wells.get(0).getValue().distanceTo(pos) > getFuel()
+			) {
 			return null;
 		}
 		
